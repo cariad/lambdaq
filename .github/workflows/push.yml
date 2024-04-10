@@ -17,6 +17,7 @@ jobs:
 
       - name: Validate
         run: >
+          pip install pipenv --user &&
           pipenv sync --dev &&
           pipenv run lint &&
           pipenv run test &&

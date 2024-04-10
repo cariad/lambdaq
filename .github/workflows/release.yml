@@ -17,6 +17,7 @@ jobs:
 
       - name: Build
         run: >
+          pip install pipenv --user &&
           pipenv sync --dev &&
           pipenv run build ${{ github.ref_name }}
 
