@@ -1,0 +1,4 @@
+.coverage
+coverage.xml
+dist/
+lambdaq.egg-info/
