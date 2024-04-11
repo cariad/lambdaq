@@ -7,7 +7,6 @@ from pytest import raises
 from lambdaq import handle_event
 
 
-
 class Message(TypedDict):
     magic_word: str
 
