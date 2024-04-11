@@ -18,7 +18,7 @@ With LambdaQ, your script looks like this:
 
 ```python
 from typing import Any, TypedDict
-from lambdaq import handle_event
+from lambdaq import Metadata, handle_event
 
 class Inputs(TypedDict):
     x: int
@@ -35,7 +35,7 @@ def main(event: Any, context: Any) -> Sum | None:
         "task_token",
     )
 
-def perform_sum(inputs: Inputs) -> Sum:
+def perform_sum(inputs: Inputs, metadata: Metadata) -> Sum:
     return Sum(result=inputs["x"] + inputs["y"])
 ```
 
