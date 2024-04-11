@@ -21,7 +21,7 @@ jobs:
           pipenv sync --dev &&
           pipenv run lint &&
           pipenv run test &&
-          pipenv run build ${{ github.ref_name }}
+          pipenv run build 0.0.0
 
       - uses: codecov/codecov-action@v4
         with:
