@@ -4,6 +4,7 @@ from typing import Any, Generic, cast
 from boto3 import Session
 
 from lambdaq.logging import logger
+from lambdaq.metadata import Metadata
 from lambdaq.types import MessageHandler, TMessage, TResponse
 
 
@@ -17,8 +18,12 @@ class EventHandler(Generic[TMessage, TResponse]):
     ) -> None:
         self.event = event
         self.handler = handler
+
+        self.metadata = Metadata(
+            session or Session(),
+        )
+
         self.task_token_key = task_token_key
-        self.session = session or Session()
 
     def _send_task_state(
         self,
@@ -26,7 +31,7 @@ class EventHandler(Generic[TMessage, TResponse]):
         exception: Exception | None = None,
         response: TResponse | None = None,
     ) -> None:
-        sf = self.session.client("stepfunctions")
+        sf = self.metadata.session.client("stepfunctions")
 
         try:
             if exception:
@@ -60,6 +65,7 @@ class EventHandler(Generic[TMessage, TResponse]):
             logger.info("Received a single direct invocation")
             return self.handler(
                 cast(TMessage, self.event),
+                self.metadata,
             )
 
         records = self.event["Records"]
@@ -76,7 +82,10 @@ class EventHandler(Generic[TMessage, TResponse]):
             token = str(message[self.task_token_key])  # type: ignore
 
             try:
-                response = self.handler(message)
+                response = self.handler(
+                    message,
+                    self.metadata,
+                )
 
             except Exception as ex:
                 self._send_task_state(

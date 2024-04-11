@@ -4,7 +4,7 @@ from unittest.mock import Mock, call
 
 from pytest import raises
 
-from lambdaq import handle_event
+from lambdaq import Metadata, handle_event
 
 
 class Message(TypedDict):
@@ -21,6 +21,7 @@ class Response(TypedDict):
 
 def handle_message(
     message: Message,
+    metadata: Metadata,
 ) -> Response:
     if message["magic_word"] == "clown":
         raise ValueError("Clowns are too cool for nerds")
