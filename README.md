@@ -32,7 +32,7 @@ def main(event: Any, context: Any) -> Sum | None:
     return handle_event(
         event,
         perform_sum,
-        "task_token",
+        task_token_key="task_token",
     )
 
 def perform_sum(inputs: Inputs, metadata: Metadata) -> Sum:
@@ -40,6 +40,8 @@ def perform_sum(inputs: Inputs, metadata: Metadata) -> Sum:
 ```
 
 The `lambdaq.handle_event` function reads the invocation event, a reference to a message handler, and the key of the task token injected by the state machine.
+
+If the task token key is omitted then the work will still be performed, but the state won't be reported back to Step Functions. This would be used, for example, for functions invoked by SQS queues that don't need to report back any status.
 
 The message handler--`perform_sum` in this example--reads a strongly-typed message and returns a strongly-typed response.
 

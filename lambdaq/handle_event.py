@@ -9,8 +9,8 @@ from lambdaq.types import MessageHandler, TMessage, TResponse
 def handle_event(
     event: Any,
     handler: MessageHandler[TMessage, TResponse],
-    task_token_key: str,
     session: Session | None = None,
+    task_token_key: str | None = None,
 ) -> TResponse | None:
     """
     Handles a Lambda function event.
@@ -20,10 +20,11 @@ def handle_event(
 
         handler: Reference to a message-handling function.
 
-        task_token_key: Key of the task token in each message.
-
         session: Optional Boto3 session. A new session will be created by
         default.
+
+        task_token_key: Key of the Step Functions task token in each message.
+        Step Functions state will not be submitted if this is omitted.
 
     Returns:
         Message handling response if the function was invoked directly, or
@@ -33,8 +34,8 @@ def handle_event(
     event_handler = EventHandler(
         event,
         handler,
-        task_token_key,
         session=session,
+        task_token_key=task_token_key,
     )
 
     return event_handler.handle_messages()

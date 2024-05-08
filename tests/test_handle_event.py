@@ -11,7 +11,7 @@ class Message(TypedDict):
     magic_word: str
 
 
-class QueuedMessage(Message):
+class QueuedMessage(Message, total=False):
     task_token: str
 
 
@@ -43,8 +43,8 @@ def test_direct_event(
     response = handle_event(
         event,
         handle_message,
-        "task_token",
         session=session,
+        task_token_key="task_token",
     )
 
     send_task_failure.assert_not_called()
@@ -68,8 +68,8 @@ def test_direct_event_with_failure(
         _ = handle_event(
             event,
             handle_message,
-            "task_token",
             session=session,
+            task_token_key="task_token",
         )
 
     assert str(ex.value) == "Clowns are too cool for nerds"
@@ -99,8 +99,8 @@ def test_single_enqueued_event(
     response = handle_event(
         event,
         handle_message,
-        "task_token",
         session=session,
+        task_token_key="task_token",
     )
 
     send_task_failure.assert_not_called()
@@ -112,6 +112,64 @@ def test_single_enqueued_event(
         ),
         taskToken="dog_token",
     )
+
+    assert response is None
+
+
+def test_single_enqueued_event_without_token(
+    send_task_failure: Mock,
+    send_task_success: Mock,
+    session: Mock,
+) -> None:
+    event = {
+        "Records": [
+            {
+                "body": dumps(
+                    QueuedMessage(
+                        magic_word="octopus",
+                    ),
+                )
+            }
+        ],
+    }
+
+    response = handle_event(
+        event,
+        handle_message,
+        session=session,
+    )
+
+    send_task_failure.assert_not_called()
+    send_task_success.assert_not_called()
+
+    assert response is None
+
+
+def test_single_enqueued_event_without_token_with_failure(
+    send_task_failure: Mock,
+    send_task_success: Mock,
+    session: Mock,
+) -> None:
+    event = {
+        "Records": [
+            {
+                "body": dumps(
+                    QueuedMessage(
+                        magic_word="clown",
+                    ),
+                )
+            }
+        ],
+    }
+
+    response = handle_event(
+        event,
+        handle_message,
+        session=session,
+    )
+
+    send_task_failure.assert_not_called()
+    send_task_success.assert_not_called()
 
     assert response is None
 
@@ -145,8 +203,8 @@ def test_multiple_enqueued_events(
     response = handle_event(
         event,
         handle_message,
-        "task_token",
         session=session,
+        task_token_key="task_token",
     )
 
     send_task_failure.assert_not_called()
@@ -222,8 +280,8 @@ def test_multiple_enqueued_events_with_failures(
     response = handle_event(
         event,
         handle_message,
-        "task_token",
         session=session,
+        task_token_key="task_token",
     )
 
     assert send_task_failure.call_count == 2
@@ -295,8 +353,8 @@ def test_state_machine_time_out(
     response = handle_event(
         event,
         handle_message,
-        "task_token",
         session=session,
+        task_token_key="task_token",
     )
 
     send_task_failure.assert_not_called()
