@@ -9,12 +9,27 @@ from lambdaq.types import MessageHandler, TMessage, TResponse
 
 
 class EventHandler(Generic[TMessage, TResponse]):
+    """
+    Event handler.
+
+    Arguments:
+        event: Function event.
+
+        handler: Reference to a message-handling function.
+
+        session: Optional Boto3 session. A new session will be created by
+        default.
+
+        task_token_key: Key of the Step Functions task token in each message.
+        Step Functions state will not be published if this is omitted.
+    """
+
     def __init__(
         self,
         event: Any,
         handler: MessageHandler[TMessage, TResponse],
-        task_token_key: str,
         session: Session | None = None,
+        task_token_key: str | None = None,
     ) -> None:
         self.event = event
         self.handler = handler
@@ -78,8 +93,8 @@ class EventHandler(Generic[TMessage, TResponse]):
             )
 
             body = loads(record["body"])
+            token = body[self.task_token_key] if self.task_token_key else None
             message = cast(TMessage, body)
-            token = str(message[self.task_token_key])  # type: ignore
 
             try:
                 response = self.handler(
@@ -88,16 +103,18 @@ class EventHandler(Generic[TMessage, TResponse]):
                 )
 
             except Exception as ex:
-                self._send_task_state(
-                    token,
-                    exception=ex,
-                )
+                if token:
+                    self._send_task_state(
+                        token,
+                        exception=ex,
+                    )
 
                 continue
 
-            self._send_task_state(
-                token,
-                response=response,
-            )
+            if token:
+                self._send_task_state(
+                    token,
+                    response=response,
+                )
 
         return None
